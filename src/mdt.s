@@ -42,24 +42,31 @@ Main
 :check4                cmp          #"4"
                        bne          :check5
                        jsr          ModeDoubleLores
-                       beq          :menuNoDrawLoop
+                       bra          :menuNoDrawLoop
 :check5                cmp          #"5"
                        bne          :check6
                        jsr          ModeHires
-                       beq          :menuNoDrawLoop
+                       bra          :menuNoDrawLoop
 :check6                cmp          #"6"
                        bne          :check7
                        jsr          ModeDoubleHires
-                       beq          :menuNoDrawLoop
+                       bra          :menuNoDrawLoop
 :check7                cmp          #"7"
                        bne          :check8
                        jsr          ModeSuperHires320
-                       beq          :menuNoDrawLoop
+                       bra          :menuNoDrawLoop
 :check8                cmp          #"8"
                        bne          :check9
                        jsr          ModeSuperHires640
-                       beq          :menuNoDrawLoop
-:check9
+                       bra          :menuNoDrawLoop
+:check9                cmp          #"9"
+                       bne          :unknownKey
+                       jsr          ModeBorderTest
+	   bra :menuNoDrawLoop
+
+
+:unknownKey
+
                        clc
                        bcc          :menuNoDrawLoop
 *
@@ -90,27 +97,41 @@ ModeHires              jsr          SetModeHires
 ModeDoubleHires        jsr          SetModeDoubleHires
                        rts
 
-PalTable               da           _pal1,_pal2,_pal3
 ModeSuperHires320      jsr          SetModeSuperHires320
                        jsr          SHRCLEARMEM
                        jsr          DrawSHR320SCBs
                        jsr          SHRSTRIPES
                        jsr          DrawCurrentPalette
                        jsr          IncPal
-:noroll                rts
-IncPal
-                       inc          _curpal
-                       lda          _curpal
-                       cmp          #4
-                       bcc          :noroll
-                       lda          #1
-                       sta          _curpal
                        rts
 
 ModeSuperHires640      jsr          SetModeSuperHires640
                        jsr          SHRCLEARMEM
                        jsr          DrawSHR640SCBs
                        jsr          SHRSTRIPES
+                       jsr          DrawCurrentPalette
+                       jsr          IncPal
+                       rts
+_lastcolor	db 0
+ModeBorderTest
+                       lda          $c034
+                       pha
+:loop
+                       lda          KEY
+                       bpl          :nokey
+                       sta          STROBE
+                       bra          :done
+:nokey                 lda          $c02e
+                       cmp          _lastcolor
+                       beq          :nokey
+                       sta          _lastcolor
+                       and          #$0F
+                       nop
+                       nop
+                       sta          $c034
+                       bra          :loop
+:done                  pla
+                       sta          $c034
                        rts
 
 SetModeText40          jsr          SHROFF
@@ -163,6 +184,15 @@ SetModeDoubleHires     jsr          SHROFF
                        sta          MIXCLR                 ;make sure graphics-only mode
                        rts
 
+IncPal
+                       inc          _curpal
+                       lda          _curpal
+                       cmp          #4
+                       bcc          :noroll
+                       lda          #1
+                       sta          _curpal
+:noroll                rts
+
 SHROFF                 lda          #$01
                        sta          $c029
                        sta          _curpal                ;hack to reset pal between text modes... kinda pointless
@@ -195,6 +225,8 @@ SHRSTRIPES             clc
 :loop                  stal         $e12000,x
                        inx
                        inx
+                       cpx          #$7d00
+                       bcs          :done
                        iny
                        cpy          #5
                        bne          :loop
@@ -202,12 +234,12 @@ SHRSTRIPES             clc
                        beq          :stripestart
 :notF                  clc
                        adc          #$1111
-                       cpx          #$7d00
-                       bcc          :stripepass
-                       sec
+                       bra          :stripepass
+:done                  sec
                        xce
                        sep          #$30
                        rts
+
 DrawSHR640SCBs
                        lda          #0
                        ldx          #0
@@ -258,6 +290,8 @@ DrawSHR320SCBs
                        cpx          #200
                        bcc          :loop2
                        rts
+
+PalTable               da           _pal1,_pal2,_pal3
 _pal1
                        dw           $0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000,$0F0F
                        dw           $0000,$0100,$0000,$0010,$0000,$0001,$0000,$0110,$0000,$0101,$0000,$0011,$0000,$0111,$0000,$0E1F
@@ -277,24 +311,6 @@ _pal1
                        dw           $0000,$0F00,$0000,$00F0,$0000,$000F,$0000,$0FF0,$0000,$0F0F,$0000,$00FF,$0000,$0FFF,$0000,$00F8
 
 _pal2
-                       dw           $0000,$0001,$0012,$0013,$0024,$0025,$0036,$0037,$0048,$0049,$005A,$005B,$006C,$006D,$007E,$007F
-                       dw           $0100,$0111,$0112,$0123,$0124,$0135,$0136,$0147,$0148,$0159,$015A,$016B,$016C,$017D,$017E,$018F
-                       dw           $0210,$0211,$0222,$0223,$0234,$0235,$0246,$0247,$0258,$0259,$026A,$026B,$027C,$027D,$028E,$028F
-                       dw           $0310,$0321,$0322,$0333,$0334,$0345,$0346,$0357,$0358,$0369,$036A,$037B,$037C,$038D,$038E,$039F
-                       dw           $0420,$0421,$0432,$0433,$0444,$0445,$0456,$0457,$0468,$0469,$047A,$047B,$048C,$048D,$049E,$049F
-                       dw           $0520,$0531,$0532,$0543,$0544,$0555,$0556,$0567,$0568,$0579,$057A,$058B,$058C,$059D,$059E,$05AF
-                       dw           $0630,$0631,$0642,$0643,$0654,$0655,$0666,$0667,$0678,$0679,$068A,$068B,$069C,$069D,$06AE,$06AF
-                       dw           $0730,$0741,$0742,$0753,$0754,$0765,$0766,$0777,$0778,$0789,$078A,$079B,$079C,$07AD,$07AE,$07BF
-                       dw           $0840,$0841,$0852,$0853,$0864,$0865,$0876,$0877,$0888,$0889,$089A,$089B,$08AC,$08AD,$08BE,$08BF
-                       dw           $0940,$0951,$0952,$0963,$0964,$0975,$0976,$0987,$0988,$0999,$099A,$09AB,$09AC,$09BD,$09BE,$09CF
-                       dw           $0A50,$0A51,$0A62,$0A63,$0A74,$0A75,$0A86,$0A87,$0A98,$0A99,$0AAA,$0AAB,$0ABC,$0ABD,$0ACE,$0ACF
-                       dw           $0B50,$0B61,$0B62,$0B73,$0B74,$0B85,$0B86,$0B97,$0B98,$0BA9,$0BAA,$0BBB,$0BBC,$0BCD,$0BCE,$0BDF
-                       dw           $0C60,$0C61,$0C72,$0C73,$0C84,$0C85,$0C96,$0C97,$0CA8,$0CA9,$0CBA,$0CBB,$0CCC,$0CCD,$0CDE,$0CDF
-                       dw           $0D60,$0D71,$0D72,$0D83,$0D84,$0D95,$0D96,$0DA7,$0DA8,$0DB9,$0DBA,$0DCB,$0DCC,$0DDD,$0DDE,$0DEF
-                       dw           $0E70,$0E71,$0E82,$0E83,$0E94,$0E95,$0EA6,$0EA7,$0EB8,$0EB9,$0ECA,$0ECB,$0EDC,$0EDD,$0EEE,$0EEF
-                       dw           $0F70,$0F81,$0F82,$0F93,$0F94,$0FA5,$0FA6,$0FB7,$0FB8,$0FC9,$0FCA,$0FDB,$0FDC,$0FED,$0FEE,$0FFF
-
-_pal3
                        dw           $0F00,$0F01,$0F12,$0F13,$0F24,$0F25,$0F36,$0F37,$0F48,$0F49,$0F5A,$0F5B,$0F6C,$0F6D,$0F7E,$0F7F
                        dw           $0E00,$0E11,$0E12,$0E23,$0E24,$0E35,$0E36,$0E47,$0E48,$0E59,$0E5A,$0E6B,$0E6C,$0E7D,$0E7E,$0E8F
                        dw           $0D10,$0D11,$0D22,$0D23,$0D34,$0D35,$0D46,$0D47,$0D58,$0D59,$0D6A,$0D6B,$0D7C,$0D7D,$0D8E,$0D8F
@@ -313,7 +329,26 @@ _pal3
                        dw           $0070,$0081,$0082,$0093,$0094,$00A5,$00A6,$00B7,$00B8,$00C9,$00CA,$00DB,$00DC,$00ED,$00EE,$00FF
 
 
+_pal3
+                       dw           $0000,$0001,$0012,$0013,$0024,$0025,$0036,$0037,$0048,$0049,$005A,$005B,$006C,$006D,$007E,$007F
+                       dw           $0100,$0111,$0112,$0123,$0124,$0135,$0136,$0147,$0148,$0159,$015A,$016B,$016C,$017D,$017E,$018F
+                       dw           $0210,$0211,$0222,$0223,$0234,$0235,$0246,$0247,$0258,$0259,$026A,$026B,$027C,$027D,$028E,$028F
+                       dw           $0310,$0321,$0322,$0333,$0334,$0345,$0346,$0357,$0358,$0369,$036A,$037B,$037C,$038D,$038E,$039F
+                       dw           $0420,$0421,$0432,$0433,$0444,$0445,$0456,$0457,$0468,$0469,$047A,$047B,$048C,$048D,$049E,$049F
+                       dw           $0520,$0531,$0532,$0543,$0544,$0555,$0556,$0567,$0568,$0579,$057A,$058B,$058C,$059D,$059E,$05AF
+                       dw           $0630,$0631,$0642,$0643,$0654,$0655,$0666,$0667,$0678,$0679,$068A,$068B,$069C,$069D,$06AE,$06AF
+                       dw           $0730,$0741,$0742,$0753,$0754,$0765,$0766,$0777,$0778,$0789,$078A,$079B,$079C,$07AD,$07AE,$07BF
+                       dw           $0840,$0841,$0852,$0853,$0864,$0865,$0876,$0877,$0888,$0889,$089A,$089B,$08AC,$08AD,$08BE,$08BF
+                       dw           $0940,$0951,$0952,$0963,$0964,$0975,$0976,$0987,$0988,$0999,$099A,$09AB,$09AC,$09BD,$09BE,$09CF
+                       dw           $0A50,$0A51,$0A62,$0A63,$0A74,$0A75,$0A86,$0A87,$0A98,$0A99,$0AAA,$0AAB,$0ABC,$0ABD,$0ACE,$0ACF
+                       dw           $0B50,$0B61,$0B62,$0B73,$0B74,$0B85,$0B86,$0B97,$0B98,$0BA9,$0BAA,$0BBB,$0BBC,$0BCD,$0BCE,$0BDF
+                       dw           $0C60,$0C61,$0C72,$0C73,$0C84,$0C85,$0C96,$0C97,$0CA8,$0CA9,$0CBA,$0CBB,$0CCC,$0CCD,$0CDE,$0CDF
+                       dw           $0D60,$0D71,$0D72,$0D83,$0D84,$0D95,$0D96,$0DA7,$0DA8,$0DB9,$0DBA,$0DCB,$0DCC,$0DDD,$0DDE,$0DEF
+                       dw           $0E70,$0E71,$0E82,$0E83,$0E94,$0E95,$0EA6,$0EA7,$0EB8,$0EB9,$0ECA,$0ECB,$0EDC,$0EDD,$0EEE,$0EEF
+                       dw           $0F70,$0F81,$0F82,$0F93,$0F94,$0FA5,$0FA6,$0FB7,$0FB8,$0FC9,$0FCA,$0FDB,$0FDC,$0FED,$0FEE,$0FFF
+
 _curpal                db           1
+
 DrawPresetPalette1     clc
                        xce
                        rep          #$30
@@ -609,6 +644,9 @@ PrintMenu
                        PRINTSTRING  MSG_MENU8
                        PRINTSTRING  MSG_MENU9
                        PRINTSTRING  MSG_MENUQ
+                       PRINTSTRING  MSG_INFO1
+                       PRINTSTRING  MSG_INFO2
+
                        rts
 
 MSG_MENU1              asc          "1.  40-COLUMN MODE (THIS)",8D,00
@@ -622,6 +660,9 @@ MSG_MENU8              asc          "8.  SUPER HIRES 640 MODE",8D,00
 MSG_MENU9              asc          "9.  BORDER COLOR TEST",8D,00
 
 MSG_MENUQ              asc          "Q.  QUIT",8D,00
+MSG_INFO1              asc          8D,8D,8D,8D,8D,8D,8D,8D,"            MINI DISPLAY TESTER",8D,00
+MSG_INFO2              asc          "           (C)2015 - DAGEN BROCK",8D,00
+
 
 
 
@@ -683,6 +724,8 @@ QuitParm               dfb          4                      ; number of parameter
 
 Error                  brk          $00                    ; shouldn't be here either
                        put          strings
+
+
 
 
 
