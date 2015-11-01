@@ -6,9 +6,60 @@
 ****************************************
 
                        org          $2000                  ; start at $2000 (all ProDOS8 system files)
-                       typ          $ff                    ; set P8 type ($ff = "SYS") for output file
-                       dsk          mdtsystem              ; tell compiler what name for output file
-                       put          applerom
+
+RELOCATOR                                                  ; This uses my ProDOS8 relocator from daglib/src/rel.8
+                       jsr          CopyChunkZP
+
+                       jmp          _PGMSTART
+
+CopyChunkZP           ; brk          $ff
+                       lda          #_PGMSTART_PREMOVE
+                       sta          $00
+                       lda          #>_PGMSTART_PREMOVE
+                       sta          $01
+                       lda          #_PGMSTART
+                       sta          $02
+                       lda          #>_PGMSTART
+                       sta          $03
+
+
+                       lda          #_PGMTOTAL
+                       sta          :finalpage+1           ;leftover bytes
+                       lda          #>_PGMTOTAL
+                       sta          :pageloop+1
+                       inc
+                       sta          :pastend+1             ;lame final check
+
+
+
+                       ldx          #0                     ; page counter
+:pageloop              cpx          #$00                   ; <- THIS IS OVERWRITTEN ABOVE
+                       bne          :notfinalpage
+:finalpage             ldy          #$00                   ; <- THIS IS OVERWRITTEN ABOVE
+                       bra          :quickloop
+:notfinalpage          ldy          #$FF                   ; full page
+:quickloop             lda          ($00),y
+                       sta          ($02),y
+                       dey
+                       cpy          #$FF                   ;argh.
+                       bne          :quickloop
+                       inc          $1
+                       inc          $3
+                       inx
+:pastend               cpx          #$00                   ; <- THIS IS OVERWRITTEN ABOVE
+                       bcc          :pageloop
+                       rts
+
+
+
+
+
+
+
+
+_PGMSTART_PREMOVE
+                       org          $4000
+_PGMSTART              =            *
 
 Init
                        jsr          ModeText40
@@ -62,7 +113,7 @@ Main
 :check9                cmp          #"9"
                        bne          :unknownKey
                        jsr          ModeBorderTest
-	   bra :menuNoDrawLoop
+                       bra          :menuNoDrawLoop
 
 
 :unknownKey
@@ -112,7 +163,7 @@ ModeSuperHires640      jsr          SetModeSuperHires640
                        jsr          DrawCurrentPalette
                        jsr          IncPal
                        rts
-_lastcolor	db 0
+_lastcolor             db           0
 ModeBorderTest
                        lda          $c034
                        pha
@@ -366,7 +417,7 @@ DrawPresetPalette1     clc
                        rts
 
 DrawCurrentPalette     lda          _curpal                ;
-                       dec                                 ;table is at 0 so pal-- 
+                       dec                                 ;table is at 0 so pal--
                        asl                                 ;
                        tax                                 ;
                        lda          PalTable,x             ;patch code to point to palette
@@ -714,7 +765,7 @@ Quit                   jsr          MLI                    ; first actual comman
                        dfb          $65                    ; with "quit" request ($65)
                        da           QuitParm
                        bcs          Error
-                       brk          $00                    ; shouldn't ever  here!
+                       brk          $00                    ; shouldn't ever get here!
 
 QuitParm               dfb          4                      ; number of parameters
                        dfb          0                      ; standard quit type
@@ -726,11 +777,8 @@ Error                  brk          $00                    ; shouldn't be here e
                        put          strings
 
 
-
-
-
-
-
-
-
-
+_PGMEND                =            *
+_PGMTOTAL              =            _PGMEND-_PGMSTART
+                       typ          $ff                    ; set P8 type ($ff = "SYS") for output file
+                       dsk          mdtsystem              ; tell compiler what name for output file
+                       put          applerom
