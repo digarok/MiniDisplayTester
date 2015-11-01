@@ -9,10 +9,9 @@
 
 RELOCATOR                                                  ; This uses my ProDOS8 relocator from daglib/src/rel.8
                        jsr          CopyChunkZP
-
                        jmp          _PGMSTART
 
-CopyChunkZP           ; brk          $ff
+CopyChunkZP
                        lda          #_PGMSTART_PREMOVE
                        sta          $00
                        lda          #>_PGMSTART_PREMOVE
@@ -144,6 +143,7 @@ ModeDoubleLores        jsr          SetModeDoubleLores
                        rts
 
 ModeHires              jsr          SetModeHires
+    jsr HiresFun
                        rts
 ModeDoubleHires        jsr          SetModeDoubleHires
                        rts
@@ -718,7 +718,22 @@ MSG_INFO2              asc          "           (C)2015 - DAGEN BROCK",8D,00
 
 
 
-
+HiresFun  clc
+  xce
+  rep #$30
+  lda #$0000
+  tay
+:loop  sta $2000,y
+  inc
+  inc
+  iny
+  iny
+  cpy #$2000
+  bne :loop
+  sec
+  xce
+  sep #$30
+  rts
 
 
 
