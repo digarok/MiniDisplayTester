@@ -143,7 +143,7 @@ ModeDoubleLores        jsr          SetModeDoubleLores
                        rts
 
 ModeHires              jsr          SetModeHires
-    jsr HiresFun
+                       jsr          HiresFun
                        rts
 ModeDoubleHires        jsr          SetModeDoubleHires
                        rts
@@ -718,22 +718,22 @@ MSG_INFO2              asc          "           (C)2015 - DAGEN BROCK",8D,00
 
 
 
-HiresFun  clc
-  xce
-  rep #$30
-  lda #$0000
-  tay
-:loop  sta $2000,y
-  inc
-  inc
-  iny
-  iny
-  cpy #$2000
-  bne :loop
-  sec
-  xce
-  sep #$30
-  rts
+HiresFun               clc
+                       xce
+                       rep          #$30
+                       lda          #$0000
+                       tay
+:loop                  sta          $2000,y
+                       inc
+                       inc
+                       iny
+                       iny
+                       cpy          #$2000
+                       bne          :loop
+                       sec
+                       xce
+                       sep          #$30
+                       rts
 
 
 
@@ -797,3 +797,4 @@ _PGMTOTAL              =            _PGMEND-_PGMSTART
                        typ          $ff                    ; set P8 type ($ff = "SYS") for output file
                        dsk          mdtsystem              ; tell compiler what name for output file
                        put          applerom
+
