@@ -62,9 +62,7 @@ _PGMSTART              =            *
 
 Init
                        jsr          ModeText40
-
-
-*
+                    
 * Main Menu loop begin2
 *
 Main
@@ -143,7 +141,8 @@ ModeDoubleLores        jsr          SetModeDoubleLores
                        rts
 
 ModeHires              jsr          SetModeHires
-                       jsr          HiresFun
+                       jsr          HiresFun3
+
                        rts
 ModeDoubleHires        jsr          SetModeDoubleHires
                        rts
@@ -715,7 +714,137 @@ MSG_INFO1              asc          8D,8D,8D,8D,8D,8D,8D,8D,"            MINI DI
 MSG_INFO2              asc          "           (C)2015 - DAGEN BROCK",8D,00
 
 
+HiresY00               da           $2000
+HiresY01               da           $2400
+HiresY02               da           $2080
+HiresY03               da           $2080
 
+
+HiresFun3
+                       lda          #0                     ;starting line
+                       ldx          #0                     ; starting bit pattern
+:black                 jsr          HGRLineSolid
+                       inc
+                       cmp          #192
+                       bne          :black
+
+                       lda          #0                     ;starting line
+                       ldx          #0                     ; starting bit pattern
+:chunk0                jsr          HGRLinePattern
+                       inc
+                       cmp          #18
+                       bne          :chunk0
+
+
+                       lda          #22                    ;starting line
+                       ldx          #40                    ; starting bit pattern
+:chunk1                jsr          HGRLinePattern
+                       inc
+                       cmp          #22+18
+                       bne          :chunk1
+
+                       lda          #44                    ;starting line
+                       ldx          #80                    ; starting bit pattern
+:chunk2                jsr          HGRLinePattern
+                       inc
+                       cmp          #44+18
+                       bne          :chunk2
+
+                       lda          #66                    ;starting line
+                       ldx          #120                   ; starting bit pattern
+:chunk3                jsr          HGRLinePattern
+                       inc
+                       cmp          #66+18
+                       bne          :chunk3
+
+                       lda          #88                    ;starting line
+                       ldx          #160                   ; starting bit pattern
+:chunk4                jsr          HGRLinePattern
+                       inc
+                       cmp          #88+18
+                       bne          :chunk4
+
+                       lda          #110                   ;starting line
+                       ldx          #200                   ; starting bit pattern
+:chunk5                jsr          HGRLinePattern
+                       inc
+                       cmp          #110+18
+                       bne          :chunk5
+
+                       lda          #132                   ;starting line
+                       ldx          #240                   ; starting bit pattern
+:chunk6                jsr          HGRLinePattern
+                       inc
+                       cmp          #132+18
+                       bne          :chunk6
+                       rts
+
+
+* call with line in A, pattern in X
+HGRLinePattern         PHA
+                       jsr          ENTRY                  ;only uses A.  XY are preserved
+                       lda          GBAS+1                 ;take page address
+                       clc                                 ;
+                       adc          #$20                   ;and add #$20 to get to hires page 1
+                       sta          GBAS+1                 ;
+
+                       ldy          #0
+                       txa                                 ;THIS IS OUR BIT PATTERN (START)
+:looop                 sta          (GBAS),y
+                       iny
+                       inc                                 ;NEXT BIT PATTERN
+                       cpy          #40
+                       bne          :looop
+                       PLA
+                       rts
+
+* call with line in A, pattern in X
+HGRLineSolid           PHA
+                       jsr          ENTRY                  ;only uses A.  XY are preserved
+                       lda          GBAS+1                 ;take page address
+                       clc                                 ;
+                       adc          #$20                   ;and add #$20 to get to hires page 1
+                       sta          GBAS+1                 ;
+
+                       ldy          #0
+                       txa                                 ;THIS IS OUR ONLY BIT PATTERN
+:looop                 sta          (GBAS),y
+                       iny
+                       cpy          #40
+                       bne          :looop
+                       PLA
+                       rts
+
+
+
+
+
+HiresFun2
+                       lda          #0
+:loop
+                       PHA
+                       jsr          ENTRY
+                       lda          GBAS+1                 ;take page address
+                       clc                                 ;
+                       adc          #$20                   ;and add #$20 to get to hires page 1
+                       sta          GBAS+1                 ;
+                       ldy          #0
+                       tya
+:looop                 sta          (GBAS),y
+                       iny
+                       inc
+                       cmp          #40
+                       bne          :looop
+                       PLA
+                       inc
+                       cmp          #192
+                       bne          :loop
+                       rts
+                                                           ;for          y=0                    to
+                                                           ;for          x=0                    to
+                                                           ;getline_offset(y)
+                                                           ;stx          lineoff,x
+                                                           ;next         x                      y
 
 
 HiresFun               clc
@@ -723,9 +852,16 @@ HiresFun               clc
                        rep          #$30
                        lda          #$0000
                        tay
+                       inc
 :loop                  sta          $2000,y
+
+                                                           ;lda #%0110111011011101
+                                                           ;sta $2000,y
                        inc
-                       inc
+                       cmp          #20
+                       bne          :noroll
+                       lda          #0
+:noroll
                        iny
                        iny
                        cpy          #$2000
@@ -733,7 +869,47 @@ HiresFun               clc
                        sec
                        xce
                        sep          #$30
+                       jsr          WaitKey
                        rts
+
+
+********************************
+* AL20-HIRES BASE ADDRESS *
+* CALCULATOR ROUTINE *
+********************************
+* OBJ $300
+* ORG $300
+GBAS                   EQU          $26
+HPAG                   EQU          $E6                    ; HGR=$20, HGR2=$40
+*
+* CALC BASE ADDRESS FOR Y-COORD IN ACCUM.
+* GBAS = ADDR OF 1ST BYTE OF LINE SPECIFIED.
+* ASSUME ACCUM HAS BITS abcdefgh, C=carry
+ENTRY                  PHA                                 ; abcdefgh
+                       AND          #$C0                   ; ab000000
+                       STA          GBAS
+                       LSR                                 ; 0ab00000
+                       LSR                                 ; 00ab0000
+                       ORA          GBAS                   ; abab0000
+                       STA          GBAS
+                       PLA                                 ; abcdefgh
+                       STA          GBAS+1
+                       ASL                                 ; bcdefgh0 C=a
+                       ASL                                 ; cdefgh00 C=b
+                       ASL                                 ; defgh000 C=c
+                       ROL          GBAS+1                 ; bcdefghc C=a
+                       ASL                                 ; efgh0000 C=d
+                       ROL          GBAS+1                 ; cdefghcd C=b
+                       ASL                                 ; fgh00000 C=e
+                       ROR          GBAS                   ; eabab000
+
+                       LDA          GBAS+1                 ; cdefghcd
+                       AND          #$1F                   ; 000fghcd
+                       ORA          HPAG                   ; 001fghcd (PAGE 1)
+                       STA          GBAS+1                 ; 001fghcd
+
+DONE                   RTS
+
 
 
 
@@ -797,4 +973,3 @@ _PGMTOTAL              =            _PGMEND-_PGMSTART
                        typ          $ff                    ; set P8 type ($ff = "SYS") for output file
                        dsk          mdtsystem              ; tell compiler what name for output file
                        put          applerom
-
