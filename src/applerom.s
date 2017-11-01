@@ -8,7 +8,7 @@ CV           equ   $25
 HCOLOR       equ   $E4         ;HCOLOR value
 SETHCOL      equ   $F6EC       ;Set active HCOLOR to value of X (0 ... 7)
 HPLOT        equ   $F457       ;Plots a colored dor at the position
-                               ; given by A (vertical), Y (horizontal high), 
+                               ; given by A (vertical), Y (horizontal high),
                                ; and X (horizontal low)
 HLIN         equ   $F53A       ;Draws a line from the last plotted dot to the
                                ; position given by Y (vertical), X (horizontal high),
@@ -23,6 +23,10 @@ CLR80VID     equ   $C00C
 SET80VID     equ   $C00D
 CLR80COL     equ   $C001
 SET80COL     equ   $C001
+RDMAINRAM    equ   $C002 ;Read from main 48K RAM ($200-BFFF)
+RDCARDRAM    equ   $C003 ;Read from alternate 48K RAM ($200-BFFF)
+WRMAINRAM    equ   $C004 ;Write to main 48K RAM ($200-BFFF)
+WRCARDRAM    equ   $C005 ;Write to alternate 48K RAM ($200-BFFF)
 TXTCLR       equ   $C050
 TXTSET       equ   $C051
 MIXCLR       equ   $C052
@@ -131,4 +135,3 @@ Lo21         equ   $650
 Lo22         equ   $6d0
 Lo23         equ   $750
 Lo24         equ   $7d0
-
