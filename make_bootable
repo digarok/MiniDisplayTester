@@ -43,7 +43,14 @@ $CADIUS createvolume $IMGNAME $P8NAME $DISKSIZE
 for f in ${SRCFILES[@]};
 do
   FNAME=${f##*/}
-  echo "Processing $FNAME    (setting high bit)"
+  if [ "$INDENTATION" = "radius" ] ; then
+    echo "Indenting $FNAME with radius..."
+    $RUBY $RADIUS $f
+  elif [ "$INDENTATION" = "cadius" ] ; then
+    echo "Indenting $FNAME with cadius..."
+    $RADIUS INDENTFILE $f
+  fi
+  echo "Processing $FNAME - setting high bit - add to Prodos disk /$P8NAME/"
   cp $f $BLDDIR/$FNAME
   $CADIUS sethighbit $BLDDIR/$FNAME > /dev/null
   # add -V to debug
