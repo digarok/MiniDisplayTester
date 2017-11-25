@@ -8,7 +8,7 @@
 * PrintStringsX
 * PrintString
 
-* In case we need to move these down the road
+* In case we need to move these in the future
 _SRCPTR_          =     $26
 _DSTPTR_          =     $28
 
@@ -178,3 +178,19 @@ WinFull           stz   $20
                   lda   #24
                   sta   $23
                   rts
+
+CharToUpper       cmp   #"z"
+                  bcs   :notLower
+                  cmp   #"a"
+                  bcc   :notLower
+                  sec
+                  sbc   #$20                    ;sub 32 to get upper char
+:notLower         rts
+
+CharToLower       cmp   #"Z"
+                  bcs   :notUpper
+                  cmp   #"A"
+                  bcc   :notUpper
+                  clc
+                  adc   #$20                    ;add 32 to get lower char
+:notUpper         rts

@@ -5,60 +5,17 @@
 *  2015-10-05                          *
 ****************************************
 
-                  org   $2000                   ; start at $2000 (all ProDOS8 system files)
-
-RELOCATOR                                       ; This uses my ProDOS8 relocator from daglib/src/rel.8
-                  jsr   CopyChunkZP
+                  use   relocate
+                  org   $2000
+* start at $2000 (all ProDOS8 system files), then immediately relocate
+* our program to $4000 to free up the hires page 1
+                  Relocate _PGMSTART_PREMOVE;_PGMSTART;_PGMTOTAL
                   jmp   _PGMSTART
-
-CopyChunkZP
-                  lda   #_PGMSTART_PREMOVE
-                  sta   $00
-                  lda   #>_PGMSTART_PREMOVE
-                  sta   $01
-                  lda   #_PGMSTART
-                  sta   $02
-                  lda   #>_PGMSTART
-                  sta   $03
-
-
-                  lda   #_PGMTOTAL
-                  sta   :finalpage+1            ;leftover bytes
-                  lda   #>_PGMTOTAL
-                  sta   :pageloop+1
-                  inc
-                  sta   :pastend+1              ;lame final check
-
-
-
-                  ldx   #0                      ; page counter
-:pageloop         cpx   #$00                    ; <- THIS IS OVERWRITTEN ABOVE
-                  bne   :notfinalpage
-:finalpage        ldy   #$00                    ; <- THIS IS OVERWRITTEN ABOVE
-                  bra   :quickloop
-:notfinalpage     ldy   #$FF                    ; full page
-:quickloop        lda   ($00),y
-                  sta   ($02),y
-                  dey
-                  cpy   #$FF                    ;argh.
-                  bne   :quickloop
-                  inc   $1
-                  inc   $3
-                  inx
-:pastend          cpx   #$00                    ; <- THIS IS OVERWRITTEN ABOVE
-                  bcc   :pageloop
-                  rts
-
-
-
-
-
-
 
 
 _PGMSTART_PREMOVE
                   org   $4000
-_PGMSTART         =     *
+_PGMSTART         =     *                       ; so we are relocating to $4000
 
 Init
                   lda   #$20                    ; set page address $20xx
@@ -71,53 +28,44 @@ Main
 :menuLoop
 :menuNoDrawLoop   jsr   CheckKey
                   bcc   :menuNoDrawLoop         ;hmm?
-:keyHit           cmp   #"q"
-                  bne   :check1
-                  beq   :quitter                ;because an option might have changed
-
-:check1           cmp   #"1"
-                  bne   :check2
-                  jsr   ModeText40
-                  beq   :menuNoDrawLoop
-:check2           cmp   #"2"
-                  bne   :check3
-                  jsr   ModeText80
-                  beq   :menuNoDrawLoop
-:check3           cmp   #"3"
-                  bne   :check4
-                  jsr   ModeLores
-                  beq   :menuNoDrawLoop
-:check4           cmp   #"4"
-                  bne   :check5
-                  jsr   ModeDoubleLores
-                  bra   :menuNoDrawLoop
-:check5           cmp   #"5"
-                  bne   :check6
-                  jsr   ModeHires
-                  bra   :menuNoDrawLoop
-:check6           cmp   #"6"
-                  bne   :check7
-                  jsr   ModeDoubleHires
-                  bra   :menuNoDrawLoop
-:check7           cmp   #"7"
-                  bne   :check8
-                  jsr   ModeSuperHires320
-                  bra   :menuNoDrawLoop
-:check8           cmp   #"8"
-                  bne   :check9
-                  jsr   ModeSuperHires640
-                  bra   :menuNoDrawLoop
-:check9           cmp   #"9"
-                  bne   :unknownKey
-                  jsr   ModeBorderTest
-                  bra   :menuNoDrawLoop
-:unknownKey                                     ; ignore unknown keypresses
+                  jsr   MenuKeyPressed
                   clc
                   bcc   :menuNoDrawLoop
-*
-* Main Menu loop end ^^^
-*
-:quitter          jmp   Quit
+
+
+
+MenuKeyPressed    sta   MAIN_KEY_HIT            ; will be called with CharToUpper(key) in A
+                  ldx   #0
+:scan_key_table_loop lda MAIN_KEY_TABLE,x
+                  beq   :key_not_found          ; hit end of table marker
+                  cmp   MAIN_KEY_HIT            ; matches key hit?
+                  beq   :key_found              ; yes, branch
+                  inx                           ; no, check next value in table
+                  bne   :scan_key_table_loop    ; BRA
+:key_found        txa                           ; index
+                  asl                           ; 6502 jmp table routine
+                  tax                           ; ...
+                  lda   MAIN_KEY_JUMP_TABLE+1,X ; ...
+                  pha                           ; push it on stack
+                  lda   MAIN_KEY_JUMP_TABLE,X   ; ...
+                  pha                           ; push second byte of address(-1) on stack
+                  rts                           ; and return (jmp)
+:key_not_found    GOXY  #19;#1
+                  lda   MAIN_KEY_HIT
+                  jsr   PRBYTE                  ; $FDDA
+                  rts
+
+
+MAIN_KEY_HIT      db    0                       ; store last key hit in buffer
+MAIN_KEY_TABLE    asc   "Q","1","2","3"
+                  asc   "4","5","6","7"
+                  asc   "8","9","[","]"
+                  asc   "=",00
+MAIN_KEY_JUMP_TABLE da  Quit-1,ModeText40-1,ModeText80-1,ModeLores-1
+                  da    ModeDoubleLores-1,ModeHires-1,ModeDoubleHires-1,ModeSuperHires320-1
+                  da    ModeSuperHires640-1,ModeBorderTest-1,ModeBGColor-1,ModeFGColor-1
+                  da    ModeBorderColor-1
+
 
 
 * Current display screen for each mode
@@ -388,6 +336,35 @@ ModeBorderTest
 :done             pla
                   sta   $c034
                   rts
+
+
+ModeBGColor       lda   GSTEXT
+                  tax
+                  lda   #$0F
+                  trb   GSTEXT
+                  inx                           ; +1
+                  txa
+                  and   #$0F
+                  tsb   GSTEXT
+                  rts
+                  
+ModeFGColor       lda   GSTEXT
+                  clc
+                  adc   #$10                    ; +1 (high nibble)
+                  sta   GSTEXT
+                  rts
+
+ModeBorderColor   lda   GSBORDER
+                  tax
+                  lda   #$0F
+                  trb   GSBORDER
+                  inx                           ; +1
+                  txa
+                  and   #$0F
+                  tsb   GSBORDER
+                  rts
+
+
 
 SetModeText40     jsr   SHROFF
                   sta   TXTSET
@@ -887,6 +864,11 @@ DL_Hline          tax
                   dey
                   bpl   :loopAux
                   rts
+
+
+
+
+
 PrintMenu
                   jsr   HOME
                   PRINTXY #2;#2;MSG_MENU1
@@ -920,9 +902,9 @@ MSG_MENU8         asc   "8.  SUPER HIRES 640 MODE",00
 MSG_MENU9         asc   "9.  BORDER COLOR TEST",00
 
 
-MSG_MENU10        asc   "<.  GS BACKGROUND COLOR",00
-MSG_MENU11        asc   ">.  GS FOREGROUND COLOR",00
-MSG_MENU12        asc   "?.  GS BORDER COLOR",00
+MSG_MENU10        asc   "[.  GS BACKGROUND COLOR",00
+MSG_MENU11        asc   "].  GS FOREGROUND COLOR",00
+MSG_MENU12        asc   "=.  GS BORDER COLOR",00
 
 MSG_MENUQ         asc   "Q.  QUIT",00
 MSG_INFO1         asc   "MINI DISPLAY TESTER",00
@@ -1093,19 +1075,11 @@ WaitKey           jsr   CheckKey
 CheckKey          lda   KEY
                   bpl   :noKey
                   sta   STROBE
-                  jsr   ToLower
+                  jsr   CharToUpper
                   sec
                   rts
 :noKey            clc
                   rts
-
-ToLower           cmp   #"Z"
-                  bcs   :notUpper
-                  cmp   #"A"
-                  bcc   :notUpper
-                  clc
-                  adc   #$20                    ;add 32 to get lower char
-:notUpper         rts
 
 
 PushAll           MAC
@@ -1138,7 +1112,6 @@ QuitParm          dfb   4                       ; number of parameters
 Error             brk   $00                     ; shouldn't be here either
                   put   strings
                   put   appledetect
-
 
 _PGMEND           =     *
 _PGMTOTAL         =     _PGMEND-_PGMSTART
