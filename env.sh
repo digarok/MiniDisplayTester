@@ -7,6 +7,7 @@
 MERLIN32="/Users/dbrock/appleiigs/BrutalDeluxeCE/Merlin32_v1.0/Source/Merlin32"
 CADIUS="/Users/dbrock/appleiigs/BrutalDeluxeCE/Cadius_v1.1/Src/cadius"
 GSEMU="/Users/dbrock/appleiigs/gsplus/gsplus"
+GSEMU="/Applications/GSplus.app/Contents/MacOS/gsplus"
 RADIUS="/Users/dbrock/appleiigs/radius/radius.rb"
 RUBY="ruby"
 

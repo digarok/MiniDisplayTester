@@ -23,6 +23,7 @@ PRINTXY           MAC
                   jsr   PrintString
                   <<<
 
+* Kind of redunant?
 PRINTXY80         MAC
                   ldx   ]1
                   ldy   ]2
@@ -33,7 +34,7 @@ PRINTXY80         MAC
                   ldy   #>]3
                   jsr   PrintString40           ; TODO
                   <<<
-
+* Kind of redunant?
 PRINTXY40         MAC
                   ldx   ]1
                   ldy   ]2
@@ -52,7 +53,49 @@ PrintString       ldx   RD80VID
 
 
 * PrintString (A=Low Byte,  Y=High Byte)
-PrintString80
+PrintString80     sta   _SRCPTR_
+                  sty   _SRCPTR_+1
+                  lda   $24                     ; x value
+                  lsr
+                  sta   $30                     ; x/2 value for 80 col striping
+
+                  ldx   $25                     ; y value
+                  lda   LoLineTableL,x          ; get memory position of start of line (low byte)
+                  clc
+                  adc   $30                     ; add x/2 value - no bounds checking
+                  sta   _DSTPTR_
+                  lda   LoLineTableH,x          ; get memory position of start of line (high byte)
+                  sta   _DSTPTR_+1
+
+                                                ;brk   $ff
+                  lda   $24
+                  lsr
+                  bcc   :even
+:odd              ldx   #1
+                  bcs   :print                  ; BRA
+:even             ldx   #0
+
+:print
+                  ldy   #0
+                  sty   $31                     ; y storage - bleh
+:loop             ldy   $31
+                  lda   (_SRCPTR_),y
+                  beq   :exit
+                  cpx   #0
+                  beq   :auxPage
+:mainPage         sta   TXTPAGE1
+                  dex
+                  beq   :storeChar              ; BRA
+:auxPage          sta   TXTPAGE2
+                  inx
+                  inc   $30
+:storeChar        ldy   $30
+                  sta   (_DSTPTR_),y
+                  inc   $31
+                  bne   :loop
+:exit             rts
+
+
 PrintString40     sta   _SRCPTR_
                   sty   _SRCPTR_+1
                   ldx   $25                     ; y value

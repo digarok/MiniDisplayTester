@@ -17,12 +17,11 @@ CLRLORES          equ   $F832
 CLRHIRES          equ   $F3F2
 CLRHIRESC         equ   $F3F6                   ;clears to last color plotted
 
+
 GSTEXT            =     $C022                   ; my alternate description
-TBCOLOR           =     $C022                   ;  Character Color: low nibble = BG, high nibble is FG (text)
-
-
+TBCOLOR           =     $C022                   ; Character Color: low nibble = BG, high nibble is FG (text)
 GSBORDER          =     $C034                   ; my alternate description
-CLOCKCTL          =     $C034                   ;  b0-3=borderColor b5=stopBit b6=read b7=start
+CLOCKCTL          =     $C034                   ; b0-3=borderColor b5=stopBit b6=read b7=start
 
 
 CLR80VID          equ   $C00C

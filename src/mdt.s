@@ -347,7 +347,7 @@ ModeBGColor       lda   GSTEXT
                   and   #$0F
                   tsb   GSTEXT
                   rts
-                  
+
 ModeFGColor       lda   GSTEXT
                   clc
                   adc   #$10                    ; +1 (high nibble)
