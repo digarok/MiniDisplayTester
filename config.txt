@@ -13,7 +13,7 @@ g_limit_speed = 0
 
 
 bram1[00] = 00 00 00 01 00 00 0d 06 02 01 01 00 01 00 00 00
-bram1[10] = 00 00 07 06 02 01 01 00 00 00 0f 06 06 00 05 06
+bram1[10] = 00 00 07 06 02 01 01 00 00 00 0f 06 05 00 05 06
 bram1[20] = 01 00 00 00 00 00 00 01 07 00 00 00 03 02 02 02
 bram1[30] = 00 00 00 00 00 00 00 00 00 00 01 02 03 04 05 06
 bram1[40] = 07 00 00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d
@@ -27,7 +27,7 @@ bram1[b0] = ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
 bram1[c0] = ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
 bram1[d0] = ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
 bram1[e0] = ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
-bram1[f0] = ff ff ff ff ff ff ff ff ff ff ff ff 3d 79 97 d3
+bram1[f0] = ff ff ff ff ff ff ff ff ff ff ff ff 35 69 9f c3
 
 bram3[00] = 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 bram3[10] = 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00

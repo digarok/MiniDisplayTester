@@ -87,7 +87,7 @@ ModeText40        jsr   SetModeText40
 
 :mode0            jsr   PrintMenu
                   bra   :done
-:mode1            jsr   PrintBorderBoxes
+:mode1            jsr   PrintBorderBoxes40
                   bra   :done
 :mode2            jsr   Print4_3Box
                   bra   :done
@@ -107,25 +107,38 @@ ModeText40        jsr   SetModeText40
                   sta   ModeText40_CURDISP
 :exit             rts
 
-PrintRegularChar  PRINTXY40 #9;#17;MSG_REGULAR_CHARSET
+PrintRegularChar  bit   RD80VID
+                  bmi   :pr80
+:pr40             PRINTXY40 #9;#17;MSG_REGULAR_CHARSET
                   rts
-PrintAltChar      PRINTXY40 #8;#17;MSG_ALT_CHARSET
+:pr80             PRINTXY80 #14;#17;MSG_REGULAR_CHARSET
+                  rts
+
+PrintAltChar      bit   RD80VID
+                  bmi   :pr80
+:pr40             PRINTXY40 #8;#17;MSG_ALT_CHARSET
+                  rts
+:pr80             PRINTXY80 #14;#17;MSG_ALT_CHARSET
                   rts
 
 PrintCharTest
-                  lda   #0
-                  sta   BOX_X1
-                  sta   BOX_Y1
-                  lda   #39
-                  sta   BOX_X2
-                  lda   #23
-                  sta   BOX_Y2
-:boxloop          jsr   PrintBox40
 
+                  bit   RD80VID
+                  bpl   :40col
 
+:80col            BOX   #0;#0;#79;#23
+                  ldy   #22                     ; actual x
+                  sta   TXTPAGE2
+                  tya
+                  lsr
+                  tax
+                  inx
+                  bne   :initchar               ; BRA
 
-                  lda   #0
+:40col            BOX   #0;#0;#39;#23
                   ldx   #4
+:initchar         lda   #0
+
 :charloop         sta   Lo07,x                  ;1
                   ora   #%00100000
                   sta   Lo08,x                  ;2
@@ -145,16 +158,30 @@ PrintCharTest
                   ora   #%11100000
                   sta   Lo14,x                  ;8
                   and   #%00011111
-                  inx
-                  inc
+                  bit   RD80VID
+                  bpl   :40col_next
 
+:80col_next       pha
+                  iny
+                  tya
+                  lsr
+                  bcc   :even
+:odd              sta   TXTPAGE1
+                  bcs   :80col_fin
+:even             sta   TXTPAGE2
+:80col_fin        tax
+                  pla
+
+:40col_next       inx
+
+:next             inc
                   cmp   #32
                   bcc   :charloop
                   rts
 
 
 
-PrintBorderBoxes
+PrintBorderBoxes40
                   lda   #0
                   sta   BOX_X1
                   sta   BOX_Y1
@@ -162,7 +189,7 @@ PrintBorderBoxes
                   sta   BOX_X2
                   lda   #23
                   sta   BOX_Y2
-:boxloop          jsr   PrintBox40
+:boxloop          jsr   PrintBox
                   lda   BOX_Y1
                   cmp   #20/2
                   bcs   :printMessage
@@ -180,79 +207,64 @@ PrintBorderBoxes
                   rts
 
 
-
-Print4_3Box
-                  lda   #2
-                  sta   BOX_X1
+PrintBorderBoxes80
                   lda   #0
+                  sta   BOX_X1
                   sta   BOX_Y1
-                  lda   #37
+                  lda   #79
                   sta   BOX_X2
                   lda   #23
                   sta   BOX_Y2
-                  jsr   PrintBox40
+:boxloop          jsr   PrintBox
+                  lda   BOX_Y1
+                  cmp   #16/2                   ; 16/2
+                  bcs   :printMessage
+                  inc
+                  inc
+                  sta   BOX_X1
+                  sta   BOX_Y1
+                  dec   BOX_X2
+                  dec   BOX_X2
+                  dec   BOX_Y2
+                  dec   BOX_Y2
+                  bra   :boxloop
+:printMessage     PRINTXY80 #15;#11;MSG_BORDER_EDGE
+                  PRINTXY80 #17;#12;MSG_RES_HI
+                  rts
 
+
+Print4_3Box       BOX   #2;#0;#37;#23
 :printMessage     PRINTXY40 #12;#11;MSG_BORDER_4_3
                   PRINTXY40 #17;#12;MSG_RES_40_4_3
                   rts
 
-
-
-
-
-BOX_X1            db    0
-BOX_X2            db    0
-BOX_Y1            db    0
-BOX_Y2            db    0
-DRAWCHAR          db    $20                     ; this is what we will write to screen
-
-* A = width
-* x = start x
-* y = screen y
-PrintXLine        pha
-                  lda   LoLineTableL,y
-                  sta   $0
-                  lda   LoLineTableH,y
-                  sta   $1
-                  txa
-                  clc
-                  adc   $0
-                  sta   $0
-                  pla
-                  tay
-                  lda   DRAWCHAR
-:write            sta   (0),y
-                  dey
-                  bpl   :write
-                  rts
-
-* A = height
-* x = start y
-* y = screen x offset
-PrintYLine
-:loop             pha
-                  lda   LoLineTableL,x
-                  sta   $0
-                  lda   LoLineTableH,x
-                  sta   $1
-                  lda   DRAWCHAR
-:write            sta   ($0),y
-                  inx
-                  pla
-                  dec
-                  bpl   :loop
+Print4_3Box80     BOX   #4;#0;#75;#23
+:printMessage     PRINTXY80 #15;#11;MSG_BORDER_4_3
+                  PRINTXY80 #17;#12;MSG_RES_40_4_3
                   rts
 
 
 
 
+BOX               MAC
+                  lda   #]1
+                  sta   BOX_X1
+                  lda   #]2
+                  sta   BOX_Y1
+                  lda   #]3
+                  sta   BOX_X2
+                  lda   #]4
+                  sta   BOX_Y2
+                  jsr   PrintBox
+                  <<<
 
-PrintBox40        lda   BOX_X2                  ;top line
+PrintBox          lda   BOX_X2                  ;top line
                   sec
                   sbc   BOX_X1
                   ldx   BOX_X1
                   ldy   BOX_Y1
                   jsr   PrintXLine
+
                   lda   BOX_X2                  ;bottom line
                   sec
                   sbc   BOX_X1
@@ -275,14 +287,161 @@ PrintBox40        lda   BOX_X2                  ;top line
                   rts
 
 
+BOX_X1            db    0
+BOX_X2            db    0
+BOX_Y1            db    0
+BOX_Y2            db    0
+DRAWCHAR          db    $20                     ; this is what we will write to screen
+
+
+
+* A = height
+* x = start y
+* y = screen x offset
+PrintYLine
+                  bit   RD80VID                 ; preserve A
+                  bmi   _print_y_line_80
+
+_print_y_line_40
+:loop             pha
+                  lda   LoLineTableL,x
+                  sta   $0
+                  lda   LoLineTableH,x
+                  sta   $1
+                  lda   DRAWCHAR
+:write            sta   ($0),y
+                  inx
+                  pla
+                  dec
+                  bpl   :loop
+                  rts
+
+
+_print_y_line_80  pha
+                  tya                           ; x offset (0-79)
+                  lsr                           ; /2
+                  bcc   :even
+:odd              sta   TXTPAGE1
+                  bcs   :go
+:even             sta   TXTPAGE2
+:go               tay
+                  pla
+:loop             pha
+                  lda   LoLineTableL,x
+                  sta   $0
+                  lda   LoLineTableH,x
+                  sta   $1
+                  lda   DRAWCHAR
+:write            sta   ($0),y
+                  inx
+                  pla
+                  dec
+                  bpl   :loop
+                  rts
+
+
+* A = width
+* x = start x
+* y = screen y
+PrintXLine
+                  bit   RD80VID                 ; preserve A
+                  bmi   _print_x_line_80
+
+_print_x_line_40  pha
+                  lda   LoLineTableL,y
+                  sta   $0
+                  lda   LoLineTableH,y
+                  sta   $1
+                  txa
+                  clc
+                  adc   $0
+                  sta   $0
+                  pla
+                  tay
+                  lda   DRAWCHAR
+:write            sta   (0),y
+                  dey
+                  bpl   :write
+                  rts
+
+_print_x_line_80  pha                           ; stash width
+                  lda   LoLineTableL,y
+                  sta   $0
+                  lda   LoLineTableH,y
+                  sta   $1
+                  pla                           ; width
+                                                ; now y is done, x = x, a=iterations(width)
+
+:drawloop         pha
+                  jsr   SetTxtPageAndY
+                  lda   DRAWCHAR
+                  sta   (0),y
+                  pla
+                  inx                           ; x++
+                  dec
+                  bpl   :drawloop
+                  rts
+
+
+* Sets the 80-col text page and appropriate y offset for (zp),y storage
+* IN:  x=x position
+* OUT: y=y offset
+* TRASHED: a
+SetTxtPageAndY    txa
+                  lsr
+                  bcc   :even
+:odd              sta   TXTPAGE1
+                  bcs   :next
+:even             sta   TXTPAGE2
+:next             tay
+                  rts
+
+
+SafeWait          PushAll
+                  jsr   WaitKey
+                  PopAll
+                  rts
+
 
 
 
 
 
 ModeText80        jsr   SetModeText80
-                  jsr   PrintMenu
-                  rts
+
+                  lda   ModeText40_CURDISP
+                  beq   :mode0
+                  cmp   #1
+                  beq   :mode1
+                  cmp   #2
+                  beq   :mode2
+                  cmp   #3
+                  beq   :mode3
+                  cmp   #4
+                  beq   :mode4
+
+:mode0            jsr   PrintMenu
+                  bra   :done
+:mode1            jsr   PrintBorderBoxes80
+                  bra   :done
+:mode2            jsr   Print4_3Box80
+                  bra   :done
+:mode3            jsr   PrintCharTest
+                  jsr   PrintRegularChar
+                  bra   :done
+:mode4            sta   SETALTCH
+                  jsr   PrintCharTest
+                  jsr   PrintAltChar
+                  bra   :done
+
+:done             inc   ModeText40_CURDISP
+                  lda   ModeText40_CURDISP
+                  cmp   #5
+                  bne   :exit
+                  lda   #0
+                  sta   ModeText40_CURDISP
+:exit             rts
+
 
 ModeLores         jsr   SetModeLores
                   jsr   DrawLoresChart1
@@ -368,7 +527,7 @@ ModeBorderColor   lda   GSBORDER
 
 SetModeText40     jsr   SHROFF
                   sta   TXTSET
-                  lda   #" "                     ;omg weird.. this turns on, output ctrl-U to turn off (21)
+                  lda   #" "                     ;omg weird.. this turns on, output ctrl-U to turn off (21)"
                   jsr   $c300
                   sta   C80STOREOFF
                   lda   #$95
@@ -379,7 +538,7 @@ SetModeText40     jsr   SHROFF
 
 SetModeText80     jsr   SHROFF
                   sta   TXTSET
-                  lda   #" "                     ;omg weird.. this turns on, output ctrl-U to turn off (21)
+                  lda   #" "                     ;omg weird.. this turns on, output ctrl-U to turn off (21)"
                   jsr   $c300
                   sta   SET80COL
                   sta   SET80VID
@@ -869,8 +1028,7 @@ DL_Hline          tax
 
 
 
-PrintMenu
-                  jsr   HOME
+PrintMenu         jsr   HOME
                   PRINTXY #2;#2;MSG_MENU1
                   PRINTXY #2;#3;MSG_MENU2
                   PRINTXY #2;#4;MSG_MENU3
@@ -884,11 +1042,9 @@ PrintMenu
                   PRINTXY #2;#13;MSG_MENU11
                   PRINTXY #2;#14;MSG_MENU12
 
-
                   PRINTXY #2;#16;MSG_MENUQ
                   PRINTXY #12;#21;MSG_INFO1
                   PRINTXY #12;#22;MSG_INFO2
-
                   rts
 
 MSG_MENU1         asc   "1.  40-COLUMN MODE (THIS)",00
@@ -914,6 +1070,7 @@ MSG_REGULAR_CHARSET asc "REGULAR CHARACTER SET",00
 MSG_ALT_CHARSET   asc   "ALTERNATE CHARACTER SET",00
 MSG_BORDER_EDGE   asc   "BORDER-TO-BORDER",00
 MSG_RES_LO        asc   "40 X 24",00
+MSG_RES_HI        asc   "80 X 24",00
 MSG_BORDER_4_3    asc   "ASPECT RATIO ~ 4:3",00
 MSG_RES_40_4_3    asc   "36 X 24",00
 HiresY00          da    $2000
@@ -962,6 +1119,7 @@ HGRLinePattern    PHA
                   PLA
                   rts
 
+
 * call with line in A, pattern in X
 HGRLineSolid      PHA
                   jsr   HGRBASE                 ;only uses A.  XY are preserved
@@ -973,9 +1131,6 @@ HGRLineSolid      PHA
                   bne   :looop
                   PLA
                   rts
-
-
-
 
 
 HiresFun2
@@ -995,12 +1150,12 @@ HiresFun2
                   cmp   #192
                   bne   :loop
                   rts
-                                                ;for          y=0                    to
-                                                ;for          x=0                    to
-                                                ;getline_offset(y)
-                                                ;stx          lineoff,x
-                                                ;next         x                      y
 
+* for y=0 to
+*  for x=0 to
+*   getline_offset(y)
+*   stx lineoff,x
+* next x y
 
 HiresFun          clc
                   xce

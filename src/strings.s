@@ -32,8 +32,9 @@ PRINTXY80         MAC
 
                   lda   #]3
                   ldy   #>]3
-                  jsr   PrintString40           ; TODO
+                  jsr   PrintString80
                   <<<
+
 * Kind of redunant?
 PRINTXY40         MAC
                   ldx   ]1
@@ -67,7 +68,6 @@ PrintString80     sta   _SRCPTR_
                   lda   LoLineTableH,x          ; get memory position of start of line (high byte)
                   sta   _DSTPTR_+1
 
-                                                ;brk   $ff
                   lda   $24
                   lsr
                   bcc   :even
