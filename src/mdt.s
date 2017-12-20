@@ -109,16 +109,16 @@ ModeText40        jsr   SetModeText40
 
 PrintRegularChar  bit   RD80VID
                   bmi   :pr80
-:pr40             PRINTXY40 #9;#17;MSG_REGULAR_CHARSET
+:pr40             PRINTXY #9;#17;MSG_REGULAR_CHARSET
                   rts
-:pr80             PRINTXY80 #14;#17;MSG_REGULAR_CHARSET
+:pr80             PRINTXY #29;#17;MSG_REGULAR_CHARSET
                   rts
 
 PrintAltChar      bit   RD80VID
                   bmi   :pr80
-:pr40             PRINTXY40 #8;#17;MSG_ALT_CHARSET
+:pr40             PRINTXY #8;#17;MSG_ALT_CHARSET
                   rts
-:pr80             PRINTXY80 #14;#17;MSG_ALT_CHARSET
+:pr80             PRINTXY #28;#17;MSG_ALT_CHARSET
                   rts
 
 PrintCharTest
@@ -202,8 +202,8 @@ PrintBorderBoxes40
                   dec   BOX_Y2
                   dec   BOX_Y2
                   bra   :boxloop
-:printMessage     PRINTXY40 #12;#11;MSG_BORDER_EDGE
-                  PRINTXY40 #17;#12;MSG_RES_LO
+:printMessage     PRINTXY #12;#11;MSG_BORDER_EDGE
+                  PRINTXY #16;#12;MSG_RES_LO
                   rts
 
 
@@ -228,19 +228,19 @@ PrintBorderBoxes80
                   dec   BOX_Y2
                   dec   BOX_Y2
                   bra   :boxloop
-:printMessage     PRINTXY80 #15;#11;MSG_BORDER_EDGE
-                  PRINTXY80 #17;#12;MSG_RES_HI
+:printMessage     PRINTXY #32;#11;MSG_BORDER_EDGE
+                  PRINTXY #36;#12;MSG_RES_HI
                   rts
 
 
 Print4_3Box       BOX   #2;#0;#37;#23
-:printMessage     PRINTXY40 #12;#11;MSG_BORDER_4_3
-                  PRINTXY40 #17;#12;MSG_RES_40_4_3
+:printMessage     PRINTXY #11;#11;MSG_BORDER_4_3
+                  PRINTXY #16;#12;MSG_RES_40_4_3
                   rts
 
 Print4_3Box80     BOX   #4;#0;#75;#23
-:printMessage     PRINTXY80 #15;#11;MSG_BORDER_4_3
-                  PRINTXY80 #17;#12;MSG_RES_40_4_3
+:printMessage     PRINTXY #31;#11;MSG_BORDER_4_3
+                  PRINTXY #36;#12;MSG_RES_80_4_3
                   rts
 
 
@@ -1073,6 +1073,8 @@ MSG_RES_LO        asc   "40 X 24",00
 MSG_RES_HI        asc   "80 X 24",00
 MSG_BORDER_4_3    asc   "ASPECT RATIO ~ 4:3",00
 MSG_RES_40_4_3    asc   "36 X 24",00
+MSG_RES_80_4_3    asc   "72 X 24",00
+
 HiresY00          da    $2000
 HiresY01          da    $2400
 HiresY02          da    $2080

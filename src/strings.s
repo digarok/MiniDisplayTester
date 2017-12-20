@@ -56,42 +56,31 @@ PrintString       ldx   RD80VID
 * PrintString (A=Low Byte,  Y=High Byte)
 PrintString80     sta   _SRCPTR_
                   sty   _SRCPTR_+1
-                  lda   $24                     ; x value
-                  lsr
-                  sta   $30                     ; x/2 value for 80 col striping
 
                   ldx   $25                     ; y value
                   lda   LoLineTableL,x          ; get memory position of start of line (low byte)
-                  clc
-                  adc   $30                     ; add x/2 value - no bounds checking
                   sta   _DSTPTR_
                   lda   LoLineTableH,x          ; get memory position of start of line (high byte)
                   sta   _DSTPTR_+1
 
+                  lda   #0                      ; src index
+                  sta   $30                     ; src index
+:loop
                   lda   $24
                   lsr
+                  sta   $31                     ; dst index
                   bcc   :even
-:odd              ldx   #1
+:odd              sta   TXTPAGE1
                   bcs   :print                  ; BRA
-:even             ldx   #0
+:even             sta   TXTPAGE2
 
-:print
-                  ldy   #0
-                  sty   $31                     ; y storage - bleh
-:loop             ldy   $31
+:print            ldy   $30
                   lda   (_SRCPTR_),y
                   beq   :exit
-                  cpx   #0
-                  beq   :auxPage
-:mainPage         sta   TXTPAGE1
-                  dex
-                  beq   :storeChar              ; BRA
-:auxPage          sta   TXTPAGE2
-                  inx
-                  inc   $30
-:storeChar        ldy   $30
+                  ldy   $31
                   sta   (_DSTPTR_),y
-                  inc   $31
+                  inc   $24
+                  inc   $30
                   bne   :loop
 :exit             rts
 
