@@ -35,9 +35,8 @@ I have attempted to support 6502 CPU except for the SHR modes.  I probably have 
 - Double Low Resolution  "4"
 - - Color Bands
 - - Box "Art"
-- - Double Lo-Res "Coppers" 40-col mixed mode (NOPE?!)
 - - Double Lo-Res "Coppers" 80-col mixed mode
-- - Color Bands 80-col mixed mode w/ labels  (TODO!)
+- - Color Bands 80-col mixed mode w/ labels
 - High Resolution   "5"
 - - HR Patterns $00 - $FF
 - - HR Solid Bars
@@ -46,7 +45,6 @@ I have attempted to support 6502 CPU except for the SHR modes.  I probably have 
 - Double High Resolution   "6"
 - - DHR Patterns $00 - $FF
 - - DHR Solid Bars
-- - DHR Solid Bars 40-col mixed mode (NOPE?!)
 - - DHR Solid Bars 80-col mixed mode
 - - DHR Solid Bars 80-col mixed mode w/ labels
 - Super High Resolution (320)   "7"

@@ -177,17 +177,18 @@ ModeDoubleLores         jsr SetModeDoubleLores
                         beq :mode1
                         cmp #2
                         beq :mode2
-:mode0
-                        jsr DrawDoubleLoresChart1
+                        cmp #3
+                        beq :mode3
+:mode0                  jsr DrawDoubleLoresChart1
                         jmp :done
-:mode1
-                        jsr DrawLoresChart2
+:mode1                  jsr DrawLoresChart2
                         jmp :done
-:mode2
-                        jsr DrawDoubleLoresMix1
+:mode2                  jsr DrawDoubleLoresMix1
+                        jmp :done
+:mode3                  jsr DrawDoubleLoresMixLabel
                         jmp :done
 
-:done                   INCROLLOVER ModeDoubleLores_CURDISP;#3
+:done                   INCROLLOVER ModeDoubleLores_CURDISP;#4
                         rts
 
 * Key "5" hit!
@@ -874,6 +875,17 @@ DrawDoubleLoresMix1
                         jsr DrawMixedLineNum
                         rts
 
+DrawDoubleLoresMixLabel
+                        lda #$00
+                        jsr DoubleLoresFillScreen
+                        jsr DrawDoubleLoresBars2
+                        sta MIXSET
+                        jsr ClearDLo4
+                        PRINTXYSTRING #6;#20;MSG_DBLLORES_MIX_80_LBL
+                        jsr DrawMixedLineNum
+                        rts
+
+
 DrawMixedLineNum        bit RD80VID
                         bpl :40col1
                         sta TXTPAGE2
@@ -915,7 +927,7 @@ DrawMixedLineNum        bit RD80VID
                                                     ;    13 => 14,
                                                     ;    14 => 7,
                                                     ;    15 => 15
-                        *   color,                  x
+*   color,                  x
 DrawDoubleLoresBars     sta TXTPAGE2
                         lda #$11                    ; dk blue
                         ldx #2
@@ -972,6 +984,45 @@ DrawDoubleLoresBars     sta TXTPAGE2
                         jsr LoresVlinX
                         ldx #25
                         jsr LoresVlinX
+
+                        rts
+
+DrawDoubleLoresBars2
+                        lda #$00                    ; start: a=black, x=x pos 5, y=loop counter 0
+                        tay
+                        ldx #4
+                        sta TXTPAGE1
+:loop                   jsr LoresVlinX
+                        inx
+                        iny
+                        cpy #1
+                        bne :loop                   ; next column, same color
+                        ldy #0
+                        inx                         ; skip column
+                        clc
+                        adc #$11                    ; next color
+                        bcc :loop                   ; or done
+
+                        lda #$00                    ; start: a=black, x=x pos 5, y=loop counter 0
+                        tay
+                        ldx #4
+                        sta TXTPAGE2
+:loop2                  sta $80
+                        sty $81
+                        tay
+                        lda MainAuxMap,y
+                        jsr LoresVlinX
+                        ldy $81
+                        lda $80
+                        inx
+                        iny
+                        cpy #1
+                        bne :loop2                   ; next column, same color
+                        ldy #0
+                        inx                         ; skip column
+                        clc
+                        adc #$11                    ; next color
+                        bcc :loop2                   ; or done
 
                         rts
 
@@ -1302,6 +1353,7 @@ MSG_LORES_MIX_80        asc "LORES MIXED MODE WITH 80-COLUMN TEXT",00
 MSG_LORES_MIX_40_LBL    asc "BLK   DBL DGN BLU BRN LGY GRN LGN   BLK",00
 MSG_LORES_MIX_40_LBL2   asc "RED PUR GRY LBL ORN PNK YEL WHT",00
 MSG_DBLLORES_MIX_80     asc "DOUBLE LORES MIXED MODE WITH 80-COLUMN TEXT",00
+MSG_DBLLORES_MIX_80_LBL    asc "BLK   RED DBL PUR DGN DGY BLU LBL BRN ORN LGY PNK GRN YEL LGN WHT   BLK",00
 MSG_HIRES_MIX_40        asc "HIRES MIXED MODE WITH 40-COLUMN TEXT",00
 MSG_HIRES_MIX_80        asc "HIRES MIXED MODE WITH 80-COLUMN TEXT",00
 MSG_DBLHIRES_MIX_80     asc "DOUBLE HIRES MIXED MODE WITH 80-COLUMN TEXT",00
