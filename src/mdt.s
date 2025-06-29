@@ -2,8 +2,7 @@
 * MiniDisplayTester                    *
 *                                      *
 *  Dagen Brock <dagenbrock@gmail.com>  *
-*  2015-10-05                          *
-*  (c) 2015-2024                       *
+*  (c) 2015-2025                       *
 ****************************************
 
                         use relocate
@@ -1227,8 +1226,9 @@ PrintMenu               jsr HOME
                         PRINTXYSTRING #2;#13;MSG_MENU11
                         PRINTXYSTRING #2;#14;MSG_MENU12
                         PRINTXYSTRING #2;#16;MSG_MENUQ
-                        PRINTXYSTRING #12;#21;MSG_INFO1
-                        PRINTXYSTRING #12;#22;MSG_INFO2
+                        PRINTXYSTRING #10;#20;MSG_INFO1
+                        PRINTXYSTRING #2;#21;MSG_INFO2
+                        PRINTXYSTRING #6;#23;MSG_INFO3
                         bit RD80VID
                         bmi :80col
 :40col                  PRINTXYSTRING #24;#2;MSG_THIS
@@ -1255,7 +1255,8 @@ MSG_MENU12              asc "=.  GS BORDER COLOR",00
 
 MSG_MENUQ               asc "Q.  QUIT",00
 MSG_INFO1               asc "MINI DISPLAY TESTER",00
-MSG_INFO2               asc "(C)2015 - 2018 DAGEN BROCK!",00
+MSG_INFO2               asc "GITHUB.COM/DIGAROK/MINIDISPLAYTESTER",00
+MSG_INFO3               asc "(C)2015 - 2025 DAGEN BROCK",00
 
 MSG_REGULAR_CHARSET     asc "REGULAR CHARACTER SET",00
 MSG_ALT_CHARSET         asc "ALTERNATE CHARACTER SET",00
