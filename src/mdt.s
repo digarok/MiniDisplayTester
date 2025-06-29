@@ -151,6 +151,8 @@ ModeLores               jsr SetModeLores
                         beq :mode2
                         cmp #3
                         beq :mode3
+                        cmp #4
+                        beq :mode4
 :mode0                  jsr DrawLoresChart1
                         jmp :done
 :mode1                  jsr DrawLoresChart2
@@ -159,8 +161,10 @@ ModeLores               jsr SetModeLores
                         jmp :done
 :mode3                  jsr DrawLoresMix2
                         jmp :done
+:mode4                  jsr DrawLoresMixLabel
+                        jmp :done
 
-:done                   INCROLLOVER ModeLores_CURDISP;#4
+:done                   INCROLLOVER ModeLores_CURDISP;#5
                         rts
 
 * Key "4" hit!
@@ -262,7 +266,7 @@ ModeDoubleHires         jsr SetModeDoubleHires
                         sta SET80VID
                         sta SET80COL
                         jsr ClearDLo4
-                        PRINTXYSTRING #20;#21;MSG_DHIRES_MIX_80
+                        PRINTXYSTRING #20;#21;MSG_DBLHIRES_MIX_80
                         jsr DrawMixedLineNum
                         bne :done
 
@@ -274,7 +278,7 @@ ModeDoubleHires         jsr SetModeDoubleHires
                         sta SET80VID
                         sta SET80COL
                         jsr ClearDLo4
-                        PRINTXYSTRING #2;#20;MSG_DHIRES_CLR_80
+                        PRINTXYSTRING #2;#20;MSG_DBLHIRES_80_LBL
 
 
 :done                   INCROLLOVER ModeDoubleHires_CURDISP;#4
@@ -818,7 +822,7 @@ DrawLoresMix1
                         jsr DrawLoresBars
                         sta MIXSET
                         jsr ClearLo4
-                        PRINTXYSTRING #2;#21;MSG_LO_RES_MIX_40
+                        PRINTXYSTRING #2;#21;MSG_LORES_MIX_40
                         jsr DrawMixedLineNum
                         rts
 
@@ -846,10 +850,19 @@ DrawLoresMix2
                         sta SET80VID
                         sta SET80COL
                         jsr ClearDLo4
-                        PRINTXYSTRING #20;#21;MSG_LO_RES_MIX_80
+                        PRINTXYSTRING #20;#21;MSG_LORES_MIX_80
                         jsr DrawMixedLineNum
                         rts
 
+DrawLoresMixLabel
+                        lda #$00
+                        jsr LoresFillScreen
+                        jsr DrawLoresBars2
+                        sta MIXSET
+                        jsr ClearDLo4
+                        PRINTXYSTRING #1;#20;MSG_LORES_MIX_40_LBL
+                        PRINTXYSTRING #5;#21;MSG_LORES_MIX_40_LBL2
+                        rts
 
 DrawDoubleLoresMix1
                         lda #$55
@@ -857,7 +870,7 @@ DrawDoubleLoresMix1
                         jsr DrawDoubleLoresBars
                         sta MIXSET
                         jsr ClearDLo4
-                        PRINTXYSTRING #20;#21;MSG_DLO_RES_MIX_80
+                        PRINTXYSTRING #20;#21;MSG_DBLLORES_MIX_80
                         jsr DrawMixedLineNum
                         rts
 
@@ -1012,6 +1025,24 @@ DrawLoresBars           lda #$22                    ; dk blue
                         jsr LoresVlinX
                         ldx #24
                         jsr LoresVlinX
+
+                        rts
+
+
+DrawLoresBars2          lda #$00                    ; start: a=black, x=x pos 5, y=loop counter 0
+                        tay
+                        ldx #4
+
+:loop                   jsr LoresVlinX
+                        inx
+                        iny
+                        cpy #1
+                        bne :loop                   ; next column, same color
+                        ldy #0
+                        inx                         ; skip column
+                        clc
+                        adc #$11                    ; next color
+                        bcc :loop                   ; or done
 
                         rts
 
@@ -1266,13 +1297,15 @@ MSG_RES_HI              asc "80 X 24",00
 MSG_BORDER_4_3          asc "ASPECT RATIO ~ 4:3",00
 MSG_RES_40_4_3          asc "36 X 24",00
 MSG_RES_80_4_3          asc "72 X 24",00
-MSG_LO_RES_MIX_40       asc "LORES MIXED MODE WITH 40-COLUMN TEXT",00
-MSG_LO_RES_MIX_80       asc "LORES MIXED MODE WITH 80-COLUMN TEXT",00
-MSG_DLO_RES_MIX_80      asc "DOUBLE LORES MIXED MODE WITH 80-COLUMN TEXT",00
+MSG_LORES_MIX_40        asc "LORES MIXED MODE WITH 40-COLUMN TEXT",00
+MSG_LORES_MIX_80        asc "LORES MIXED MODE WITH 80-COLUMN TEXT",00
+MSG_LORES_MIX_40_LBL    asc "BLK   DBL DGN BLU BRN LGY GRN LGN   BLK",00
+MSG_LORES_MIX_40_LBL2   asc "RED PUR GRY LBL ORN PNK YEL WHT",00
+MSG_DBLLORES_MIX_80     asc "DOUBLE LORES MIXED MODE WITH 80-COLUMN TEXT",00
 MSG_HIRES_MIX_40        asc "HIRES MIXED MODE WITH 40-COLUMN TEXT",00
 MSG_HIRES_MIX_80        asc "HIRES MIXED MODE WITH 80-COLUMN TEXT",00
-MSG_DHIRES_MIX_80       asc "DOUBLE HIRES MIXED MODE WITH 80-COLUMN TEXT",00
-MSG_DHIRES_CLR_80       asc "Blk  Gry  Brn DBlu Blu  Grn Orng Red Pnk  Yel LGrn Aqua Pur Cyan LGy Wht ",00
+MSG_DBLHIRES_MIX_80     asc "DOUBLE HIRES MIXED MODE WITH 80-COLUMN TEXT",00
+MSG_DBLHIRES_80_LBL     asc "Blk  Gry  Brn DBlu Blu  Grn Orng Red Pnk  Yel LGrn Aqua Pur Cyan LGy Wht ",00
 
 HiresY00                da  $2000
 HiresY01                da  $2400

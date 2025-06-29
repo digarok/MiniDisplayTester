@@ -31,7 +31,7 @@ I have attempted to support 6502 CPU except for the SHR modes.  I probably have 
 - - Box "Art"
 - - Lo-Res "Coppers" 40-col mixed mode
 - - Lo-Res "Coppers" 80-col mixed mode
-- - Color Bands 80-col mixed mode w/ labels  (TODO!)
+- - Color Bands 40-col mixed mode w/ labels
 - Double Low Resolution  "4"
 - - Color Bands
 - - Box "Art"
