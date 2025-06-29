@@ -36,26 +36,30 @@ I have attempted to support 6502 CPU except for the SHR modes.  I probably have 
 - - Double Lo-Res "Coppers" 40-col mixed mode (NOPE?!)
 - - Double Lo-Res "Coppers" 80-col mixed mode
 - - Color Bands 80-col mixed mode w/ labels  (TODO!)
-- High Resolution
+- High Resolution   "5"
 - - HR Patterns $00 - $FF
 - - HR Solid Bars
 - - HR Solid Bars 40-col mixed mode
 - - HR Solid Bars 80-col mixed mode
-- Double High Resolution
+- Double High Resolution   "6"
 - - DHR Patterns $00 - $FF
 - - DHR Solid Bars
 - - DHR Solid Bars 40-col mixed mode (NOPE?!)
 - - DHR Solid Bars 80-col mixed mode
 - - DHR Solid Bars 80-col mixed mode w/ labels
-- Super High Resolution (320)
+- Super High Resolution (320)   "7"
 - - SHR Gradient Bars
 - - SHR Test Palette #1
 - - SHR Test Palette #2
-- Super High Resolution (640)
+- Super High Resolution (640)   "8"
 - - SHR Gradient Bars
 - - SHR Test Palette #1
 - - SHR Test Palette #2
 
 You can change text/text bg/border color at any time (Apple IIgs and VidHD only) using the appropriate keys `[`, `]`, and `=`.  It will cycle through all 16 colors and loop back to zero.  
 
+I would like to support the SHR modes on 8-bit Apple II's with VidHD, but currently SHR tests are IIgs only.
 
+You can get disk images from the ([releases](https://github.com/digarok/MiniDisplayTester/releases)) page!
+
+Thanks and good luck!
