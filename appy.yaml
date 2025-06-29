@@ -1,0 +1,25 @@
+assemble: [src/mdt.s]
+assembleflags: "-V"
+#formatflags: "mc:10 oc:14 cc:30 ms:1 bs:2"
+programs:
+  # merlin32: 'G:\My Drive\appleiigs\tools\merlin32-windows-v1.1.10\Merlin32.exe'
+  # cadius: 'G:\My Drive\appleiigs\tools\Cadius.exe'
+  # gsplus: '/Users/dagenbrock/appleiigs/gsplus2/GSplus2.app/Contents/MacOS/gsplus2'
+
+disks:
+  - name: mdt800
+    file: mdt800.2mg
+    size: 800KB
+    files:
+      - input: ../PRODOS.2.4.2/PRODOS
+        output: /mdt800
+      - input: src/mdt.system
+        output: /mdt800
+  - name: mdt140
+    file: mdt140.2mg
+    size: 140KB
+    files:
+      - input: ../PRODOS.2.4.2/PRODOS
+        output: /mdt140
+      - input: src/mdt.system
+        output: /mdt140
